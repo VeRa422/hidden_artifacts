@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Luxor: True Golden Artifacts</title>
+    <script src="https://cdn.jsdelivr.net/npm/progressbar.js@1.1.0/dist/progressbar.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Philosopher&display=swap');
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Philosopher', sans-serif;
+            cursor: none;
+        }
+
+        .tomb {
+            position: relative;
+            width: 100vw; height: 100vh;
+            background: url('2.png') center/cover no-repeat;
+            background-color: #050505;
+        }
+
+        #darkness {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle 220px at 50% 50%, transparent 10%, rgba(0,0,0,0.98) 100%);
+            pointer-events: none; 
+            z-index: 200;
+        }
+
+        #scarab-cursor {
+            position: fixed;
+            width: 85px; height: 85px;
+            background: url('1.png') center/contain no-repeat;
+            pointer-events: none;
+            z-index: 1000;
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.7));
+            transform: translate(-50%, -50%);
+        }
+
+        .glyph {
+            position: absolute;
+            width: 80px; height: 80px;
+            z-index: 300;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            filter: sepia(0.8) brightness(0.7) contrast(1.2) drop-shadow(0 0 5px rgba(184, 134, 11, 0.5));
+            transition: opacity 0.4s, filter 0.4s, transform 0.3s;
+        }
+
+        .glyph.charging {
+            opacity: 1 !important;
+            filter: sepia(0) brightness(1.2) contrast(1.5) drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 30px #b8860b);
+            transform: scale(1.15);
+        }
+
+        .progress-container {
+            position: absolute;
+            width: 110px; height: 110px;
+            top: -15px; left: -15px;
+            pointer-events: none;
+        }
+
+        .ui-top {
+            position: absolute; top: 20px; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 500;
+        }
+
+        .artifact-slots { display: flex; gap: 8px; margin-bottom: 10px; }
+        .slot { 
+            width: 50px; height: 50px; border: 2px solid #d4af37; 
+            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+            border-radius: 5px; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .lives-container { display: flex; gap: 15px; margin-top: 5px; }
+        .life-icon {
+            width: 25px; height: 25px;
+            background: linear-gradient(45deg, #ffd700, #b8860b);
+            clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 50% 80%, 20% 100%, 0% 35%);
+            box-shadow: 0 0 8px #ffd700;
+        }
+        .life-lost { background: #333 !important; box-shadow: none !important; opacity: 0.5; }
+
+        /* ПРАВКА: Добавлен text-transform: none и смена шрифта для окон */
+        .tablet, .victory-screen, .game-over {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px; 
+            background: radial-gradient(circle, #2c1f01 0%, #000 100%);
+            border: 2px solid #ffd700;
+            padding: 30px; text-align: center; z-index: 2000;
+            display: none; color: #ffd700;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(255, 215, 0, 0.2);
+            text-transform: none; /* Убираем принудительный капс */
+            font-family: 'Philosopher', sans-serif; /* Меняем на читаемый шрифт */
+        }
+
+        /* ПРАВКА: Стиль заголовка вопроса */
+        #q-word {
+            font-family: 'Philosopher', sans-serif;
+            font-size: 22px;
+            line-height: 1.4;
+            margin-bottom: 25px;
+            text-transform: none;
+        }
+
+        .choice-btn {
+            display: block; width: 100%; padding: 15px; margin: 12px 0;
+            background: rgba(0,0,0,0.6); border: 1px solid #ffd700; color: #ffd700; 
+            cursor: pointer; font-family: 'Cinzel Decorative';
+            transition: 0.3s;
+            text-transform: none; /* Убираем капс с кнопок */
+        }
+        .choice-btn:hover { background: #ffd700; color: #000; box-shadow: 0 0 15px #ffd700; }
+
+        .slot .glyph {
+            position: relative !important; top: 0 !important; left: 0 !important;
+            opacity: 1 !important; transform: scale(0.65) !important;
+            filter: brightness(1.3) drop-shadow(0 0 5px #ffd700) !important;
+        }
+
+        .flying {
+            transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+            z-index: 2500 !important;
+            filter: brightness(1.5) drop-shadow(0 0 20px #ffd700) !important;
+        }
+
+        @keyframes shockAnim { 
+            0% { background: rgba(255, 255, 255, 0.9); }
+            100% { background: transparent; }
+        }
+        .shock-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 3000; pointer-events: none;
+            animation: shockAnim 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+
+<div id="scarab-cursor"></div>
+<div id="flash-effect"></div>
+
+<div class="tomb" id="main-stage">
+    <div id="darkness"></div>
+    
+    <div class="ui-top">
+        <div class="artifact-slots" id="slots-container"></div>
+        <div class="lives-container" id="lives-box">
+            <div class="life-icon"></div>
+            <div class="life-icon"></div>
+            <div class="life-icon"></div>
+        </div>
+        <div id="status-text" style="color:#ffd700; margin-top:15px; letter-spacing:2px; font-size:14px;">
+            SCAN THE WALL FOR HIDDEN ARTIFACTS
+        </div>
+    </div>
+
+    <div id="glyphs-layer"></div>
+
+    <div class="tablet" id="tablet">
+        <h2 id="q-word">ARTIFACT</h2>
+        <button class="choice-btn" onclick="handleAnswer('True')">True</button>
+        <button class="choice-btn" onclick="handleAnswer('False')">False</button>
+    </div>
+
+    <div class="victory-screen" id="victory-box">
+        <h1 style="font-family:'Cinzel Decorative';">No more questions left!</h1>
+        <p>You have mastered the ancient language!</p>
+        <button class="choice-btn" onclick="location.reload()">RESTART</button>
+    </div>
+
+    <div class="game-over" id="fail-box">
+        <h1 style="font-family:'Cinzel Decorative'; color: #ff3300;">CURSED!</h1>
+        <p>The scarab's energy has depleted...</p>
+        <button class="choice-btn" onclick="location.reload()">TRY AGAIN</button>
+    </div>
+</div>
+
+<script>
+    const glyphImages = ['3.png', '4.png', '5.png', '6.png', '7.png', '8.png', '9.png', '10.png', '11.png', '12.png'];
+    let questions = [
+        { w: "The Sun God Ra traveled in a golden boat.", a: "True" },
+        { w: "Khepri is the evening form of the Sun God.", a: "False" },
+        { w: "The Pyramids were built only as tombs.", a: "False" },
+        { w: "The Ankh symbol represents eternal life.", a: "True" },
+        { w: "The Djed Pillar is a symbol of strength.", a: "True" },
+        { w: "Apophis, the Serpent, loved the light.", a: "False" },
+        { w: "The Lotus Flower symbolizes rebirth.", a: "True" },
+        { w: "Khepri rolled the Sun like a ball of light.", a: "True" },
+        { w: "If Apophis wins, the Sun will rise again.", a: "False" },
+        { w: "The Papyrus scrolls contain magic spells.", a: "True" }
+    ];
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    shuffle(questions);
+    shuffle(glyphImages);
+
+    let collectedCount = 0;
+    let lives = 3;
+    let bar = null;
+    let currentTarget = null;
+    let activeGlyphForQuestion = null;
+    let lastSafePos = { x: 0, y: 0 };
+
+    const scarab = document.getElementById('scarab-cursor');
+    const darkness = document.getElementById('darkness');
+    const tablet = document.getElementById('tablet');
+    const livesIcons = document.querySelectorAll('.life-icon');
+
+    for(let i=0; i<10; i++) {
+        let slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.id = 'slot-' + i;
+        document.getElementById('slots-container').appendChild(slot);
+    }
+
+    function initGlyphs() {
+        const layer = document.getElementById('glyphs-layer');
+        const cols = 5;
+        const rows = 2;
+        const zoneWidth = window.innerWidth / cols;
+        const zoneHeight = (window.innerHeight - 300) / rows;
+
+        questions.forEach((q, index) => {
+            const g = document.createElement('div');
+            g.className = 'glyph';
+            g.id = 'glyph-' + index;
+            g.style.backgroundImage = `url('${glyphImages[index]}')`;
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const x = (col * zoneWidth) + (zoneWidth / 2) + (Math.random()-0.5)*130 - 40;
+            const y = (row * zoneHeight) + (zoneHeight / 2) + (Math.random()-0.5)*130 + 180;
+            g.style.left = x + 'px';
+            g.style.top = y + 'px';
+            const pCont = document.createElement('div');
+            pCont.className = 'progress-container';
+            g.appendChild(pCont);
+            layer.appendChild(g);
+        });
+    }
+    initGlyphs();
+
+    window.addEventListener('mousemove', (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        scarab.style.left = x + 'px';
+        scarab.style.top = y + 'px';
+        darkness.style.background = `radial-gradient(circle 220px at ${x}px ${y}px, transparent 10%, rgba(0,0,0,0.98) 100%)`;
+
+        if(tablet.style.display === 'block' || lives <= 0) return;
+
+        const allGlyphs = document.querySelectorAll('.glyph:not(.collected)');
+        let foundAny = false;
+
+        allGlyphs.forEach(g => {
+            const rect = g.getBoundingClientRect();
+            const gx = rect.left + 40;
+            const gy = rect.top + 40;
+            const dist = Math.hypot(x - gx, y - gy);
+
+            if(dist < 180) {
+                const power = 1 - (dist / 180);
+                g.style.opacity = Math.max(parseFloat(g.style.opacity || 0), power);
+                
+                if(dist < 45) {
+                    foundAny = true;
+                    if(currentTarget !== g) {
+                        lastSafePos = { x: x, y: y };
+                        startNewCharging(g);
+                    }
+                }
+            } else if (g !== currentTarget) {
+                g.style.opacity = "0";
+            }
+        });
+        if(!foundAny) stopCharging();
+    });
+
+    function startNewCharging(g) {
+        stopCharging();
+        currentTarget = g;
+        g.classList.add('charging');
+        
+        bar = new ProgressBar.Circle(g.querySelector('.progress-container'), {
+            strokeWidth: 7, easing: 'easeInOut', duration: 2500, color: '#ffd700',
+            trailColor: 'rgba(255,215,0,0.1)', trailWidth: 1
+        });
+        bar.animate(1.0, () => {
+            if(currentTarget === g) {
+                activeGlyphForQuestion = currentTarget;
+                showQuestion();
+                stopCharging();
+            }
+        });
+    }
+
+    function stopCharging() {
+        if(currentTarget) currentTarget.classList.remove('charging');
+        if(bar) { bar.destroy(); bar = null; }
+        currentTarget = null;
+    }
+
+    function showQuestion() {
+        const qIndex = parseInt(activeGlyphForQuestion.id.split('-')[1]);
+        document.getElementById('q-word').innerText = questions[qIndex].w;
+        tablet.setAttribute('data-correct', questions[qIndex].a);
+        tablet.style.display = 'block';
+        document.body.style.cursor = 'default';
+    }
+
+    window.handleAnswer = (ans) => {
+        const correctAns = tablet.getAttribute('data-correct');
+        if(ans === correctAns) {
+            tablet.style.display = 'none';
+            document.body.style.cursor = 'none';
+            animateToSlot();
+        } else {
+            processError();
+        }
+    };
+
+    function processError() {
+        lives--;
+        if(lives >= 0) livesIcons[lives].classList.add('life-lost');
+        
+        const flash = document.getElementById('flash-effect');
+        flash.classList.add('shock-flash');
+        setTimeout(() => flash.classList.remove('shock-flash'), 400);
+
+        tablet.style.display = 'none';
+        document.body.style.cursor = 'none';
+        
+        scarab.style.transition = "transform 0.4s ease-out";
+        scarab.style.transform = "translate(-50%, -50%) scale(1.5)";
+        setTimeout(() => {
+            scarab.style.transition = "none";
+            scarab.style.transform = "translate(-50%, -50%) scale(1)";
+        }, 400);
+        
+        if(lives <= 0) {
+            document.getElementById('fail-box').style.display = 'block';
+            document.body.style.cursor = 'default';
+        }
+    }
+
+    function animateToSlot() {
+        if(!activeGlyphForQuestion) return;
+        const slot = document.getElementById('slot-' + collectedCount);
+        const slotRect = slot.getBoundingClientRect();
+        activeGlyphForQuestion.classList.add('collected', 'flying');
+        activeGlyphForQuestion.style.left = slotRect.left + 'px';
+        activeGlyphForQuestion.style.top = slotRect.top + 'px';
+
+        setTimeout(() => {
+            activeGlyphForQuestion.classList.remove('flying');
+            slot.appendChild(activeGlyphForQuestion);
+            collectedCount++;
+            if(collectedCount >= 10) {
+                document.getElementById('victory-box').style.display = 'block';
+                document.body.style.cursor = 'default';
+            }
+        }, 900);
+    }
+</script>
+</body>
+</html>
