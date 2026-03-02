@@ -229,30 +229,55 @@
         document.getElementById('slots-container').appendChild(slot);
     }
 
-    function initGlyphs() {
+  function initGlyphs() {
         const layer = document.getElementById('glyphs-layer');
-        const cols = 5;
-        const rows = 2;
-        const zoneWidth = window.innerWidth / cols;
-        const zoneHeight = (window.innerHeight - 300) / rows;
+        const cols = 5; 
+        const rows = 2; 
+        
+        // Настройки отступов, чтобы артефакты не прятались за края или UI
+        const marginTop = 180;    // Отступ сверху (под слотами)
+        const marginBottom = 60;   // Отступ снизу
+        const marginSide = 80;     // Отступ по бокам
+        
+        const availableWidth = window.innerWidth - (marginSide * 2);
+        const availableHeight = window.innerHeight - marginTop - marginBottom;
+        
+        const cellWidth = availableWidth / cols;
+        const cellHeight = availableHeight / rows;
 
         questions.forEach((q, index) => {
             const g = document.createElement('div');
             g.className = 'glyph';
             g.id = 'glyph-' + index;
             g.style.backgroundImage = `url('${glyphImages[index]}')`;
+            
             const col = index % cols;
             const row = Math.floor(index / cols);
-            const x = (col * zoneWidth) + (zoneWidth / 2) + (Math.random()-0.5)*130 - 40;
-            const y = (row * zoneHeight) + (zoneHeight / 2) + (Math.random()-0.5)*130 + 180;
+            
+            // Вычисляем центр каждой ячейки сетки
+            const centerX = marginSide + (col * cellWidth) + (cellWidth / 2);
+            const centerY = marginTop + (row * cellHeight) + (cellHeight / 2);
+            
+            // Добавляем случайное смещение ВНУТРИ ячейки (не более 60% её размера)
+            // Это создаст эффект хаотичности, но не даст им слипнуться или улететь
+            const jitterX = (Math.random() - 0.5) * (cellWidth * 0.6);
+            const jitterY = (Math.random() - 0.5) * (cellHeight * 0.6);
+            
+            // Итоговые координаты (центрируем сам глиф 80px -> вычитаем 40)
+            const x = centerX + jitterX - 40;
+            const y = centerY + jitterY - 40;
+
             g.style.left = x + 'px';
             g.style.top = y + 'px';
+            
             const pCont = document.createElement('div');
             pCont.className = 'progress-container';
             g.appendChild(pCont);
             layer.appendChild(g);
         });
     }
+
+    // Запускаем инициализацию
     initGlyphs();
 
     window.addEventListener('mousemove', (e) => {
@@ -378,4 +403,5 @@
     }
 </script>
 </body>
+
 </html>
