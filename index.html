@@ -16,14 +16,6 @@
             cursor: none;
         }
 
-        /* Стартовый экран */
-        #splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #2c1f01 0%, #000 100%);
-            z-index: 5000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-        }
-
         .tomb {
             position: relative;
             width: 100vw; height: 100vh;
@@ -83,23 +75,20 @@
             border-radius: 5px; box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.5);
         }
 
-        /* Ползунок громкости */
         .volume-box {
-            display: flex; align-items: center; gap: 10px; margin-top: 10px;
-            background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #d4af37;
+            display: flex; align-items: center; gap: 10px; margin-top: 5px;
+            background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 15px; border: 1px solid #d4af37;
         }
-        #volume-slider {
-            width: 80px; cursor: pointer; accent-color: #ffd700;
-        }
+        #volume-slider { width: 70px; cursor: pointer; accent-color: #ffd700; }
 
-        .lives-container { display: flex; gap: 15px; margin-top: 10px; }
+        .lives-container { display: flex; gap: 12px; margin-top: 10px; }
         .life-icon {
-            width: 25px; height: 25px;
+            width: 22px; height: 22px;
             background: linear-gradient(45deg, #ffd700, #b8860b);
             clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 50% 80%, 20% 100%, 0% 35%);
             box-shadow: 0 0 8px #ffd700;
         }
-        .life-lost { background: #333 !important; box-shadow: none !important; opacity: 0.5; }
+        .life-lost { background: #333 !important; box-shadow: none !important; opacity: 0.4; }
 
         .tablet, .victory-screen, .game-over {
             position: absolute; top: 50%; left: 50%;
@@ -107,12 +96,12 @@
             width: 380px; background: radial-gradient(circle, #2c1f01 0%, #000 100%);
             border: 2px solid #ffd700; padding: 30px; text-align: center;
             z-index: 2000; display: none; color: #ffd700;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9); text-transform: none;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
 
         .choice-btn {
             display: block; width: 100%; padding: 15px; margin: 12px 0;
-            background: rgba(0,0,0,0.6); border: 1px solid #ffd700; color: #ffd700; 
+            background: rgba(0,0,0,0.7); border: 1px solid #ffd700; color: #ffd700; 
             cursor: pointer; font-family: 'Cinzel Decorative'; transition: 0.3s;
         }
         .choice-btn:hover { background: #ffd700; color: #000; }
@@ -129,7 +118,7 @@
         }
 
         @keyframes shockAnim { 
-            0% { background: rgba(255, 255, 255, 0.9); }
+            0% { background: rgba(255, 255, 255, 0.8); }
             100% { background: transparent; }
         }
         .shock-flash {
@@ -139,11 +128,6 @@
     </style>
 </head>
 <body>
-
-<div id="splash-screen">
-    <h1 style="color:#ffd700; font-family:'Cinzel Decorative'; font-size: 40px; margin-bottom: 30px;">LUXOR<br><span style="font-size:20px">TRUE GOLDEN ARTIFACTS</span></h1>
-    <button class="choice-btn" style="width: 250px;" onclick="startGame()">ENTER THE TOMB</button>
-</div>
 
 <div id="scarab-cursor"></div>
 <div id="flash-effect"></div>
@@ -155,7 +139,7 @@
         <div class="artifact-slots" id="slots-container"></div>
         
         <div class="volume-box">
-            <span style="color:#ffd700; font-size:10px; font-family:'Cinzel Decorative';">VOL</span>
+            <span style="color:#ffd700; font-size:9px; font-family:'Cinzel Decorative';">VOL</span>
             <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
         </div>
 
@@ -164,28 +148,25 @@
             <div class="life-icon"></div>
             <div class="life-icon"></div>
         </div>
-        <div id="status-text" style="color:#ffd700; margin-top:15px; letter-spacing:2px; font-size:12px;">
-            SCAN THE WALL FOR HIDDEN ARTIFACTS
-        </div>
     </div>
 
     <div id="glyphs-layer"></div>
 
     <div class="tablet" id="tablet">
-        <h2 id="q-word">ARTIFACT</h2>
+        <h2 id="q-word" style="font-size: 20px; line-height: 1.4;">ARTIFACT</h2>
         <button class="choice-btn" onclick="handleAnswer('True')">True</button>
         <button class="choice-btn" onclick="handleAnswer('False')">False</button>
     </div>
 
     <div class="victory-screen" id="victory-box">
-        <h1 style="font-family:'Cinzel Decorative';">TREASURE SECURED!</h1>
-        <p>You have mastered the ancient knowledge.</p>
-        <button class="choice-btn" onclick="location.reload()">PLAY AGAIN</button>
+        <h1 style="font-family:'Cinzel Decorative';">ARTIFACTS COLLECTED!</h1>
+        <p>The path is now open.</p>
+        <button class="choice-btn" onclick="location.reload()">RESTART</button>
     </div>
 
     <div class="game-over" id="fail-box">
         <h1 style="font-family:'Cinzel Decorative'; color: #ff3300;">CURSED!</h1>
-        <p>The scarab's energy has depleted...</p>
+        <p>Your energy has faded...</p>
         <button class="choice-btn" onclick="location.reload()">TRY AGAIN</button>
     </div>
 </div>
@@ -210,7 +191,6 @@
     let bar = null;
     let currentTarget = null;
     let activeGlyphForQuestion = null;
-    let gameStarted = false;
 
     const scarab = document.getElementById('scarab-cursor');
     const darkness = document.getElementById('darkness');
@@ -223,12 +203,11 @@
         audio.play().catch(e => {});
     }
 
-    function startGame() {
-        document.getElementById('splash-screen').style.display = 'none';
-        gameStarted = true;
-        document.body.style.cursor = 'none';
+    // Инициализация СРАЗУ
+    function initGame() {
         initSlots();
         initGlyphs();
+        document.body.style.cursor = 'none';
     }
 
     function initSlots() {
@@ -244,20 +223,13 @@
 
     function initGlyphs() {
         const layer = document.getElementById('glyphs-layer');
-        layer.innerHTML = '';
         const cols = 5; const rows = 2;
+        const marginTop = 220; const marginBottom = 80; const marginSide = 100;
         
-        const marginTop = 220;
-        const marginBottom = 80;
-        const marginSide = 100;
-        
-        const availableWidth = window.innerWidth - (marginSide * 2);
-        const availableHeight = window.innerHeight - marginTop - marginBottom;
-        
-        const cellWidth = availableWidth / cols;
-        const cellHeight = availableHeight / rows;
+        const cellWidth = (window.innerWidth - (marginSide * 2)) / cols;
+        const cellHeight = (window.innerHeight - marginTop - marginBottom) / rows;
 
-        // Перемешиваем вопросы и картинки
+        // Перемешиваем
         const shuffledQ = [...questions].sort(() => Math.random() - 0.5);
         const shuffledImg = [...glyphImages].sort(() => Math.random() - 0.5);
 
@@ -272,14 +244,11 @@
             const col = index % cols;
             const row = Math.floor(index / cols);
             
-            const centerX = marginSide + (col * cellWidth) + (cellWidth / 2);
-            const centerY = marginTop + (row * cellHeight) + (cellHeight / 2);
-            
-            const jitterX = (Math.random() - 0.5) * (cellWidth * 0.5);
-            const jitterY = (Math.random() - 0.5) * (cellHeight * 0.5);
-            
-            g.style.left = (centerX + jitterX - 40) + 'px';
-            g.style.top = (centerY + jitterY - 40) + 'px';
+            const x = marginSide + (col * cellWidth) + (cellWidth / 2) + (Math.random() - 0.5) * (cellWidth * 0.5) - 40;
+            const y = marginTop + (row * cellHeight) + (cellHeight / 2) + (Math.random() - 0.5) * (cellHeight * 0.5) - 40;
+
+            g.style.left = x + 'px';
+            g.style.top = y + 'px';
             
             const pCont = document.createElement('div');
             pCont.className = 'progress-container';
@@ -289,7 +258,6 @@
     }
 
     window.addEventListener('mousemove', (e) => {
-        if(!gameStarted) return;
         const x = e.clientX; const y = e.clientY;
         scarab.style.left = x + 'px';
         scarab.style.top = y + 'px';
@@ -405,6 +373,9 @@
             }
         }, 900);
     }
+
+    // Запуск игры при загрузке окна
+    window.onload = initGame;
 </script>
 </body>
 </html>
