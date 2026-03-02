@@ -221,15 +221,25 @@
         }
     }
 
-    function initGlyphs() {
+function initGlyphs() {
         const layer = document.getElementById('glyphs-layer');
-        const cols = 5; const rows = 2;
-        const marginTop = 220; const marginBottom = 80; const marginSide = 100;
+        if (!layer) return;
+        layer.innerHTML = '';
         
-        const cellWidth = (window.innerWidth - (marginSide * 2)) / cols;
-        const cellHeight = (window.innerHeight - marginTop - marginBottom) / rows;
+        // Берем актуальные размеры экрана на момент вызова
+        const w = window.innerWidth;
+        const h = window.innerHeight;
 
-        // Перемешиваем
+        const cols = 5; 
+        const rows = 2;
+        const marginTop = 250; // Увеличил отступ, чтобы не перекрывать UI сверху
+        const marginBottom = 100;
+        const marginSide = 100;
+        
+        const cellWidth = (w - (marginSide * 2)) / cols;
+        const cellHeight = (h - marginTop - marginBottom) / rows;
+
+        // Перемешиваем вопросы и картинки
         const shuffledQ = [...questions].sort(() => Math.random() - 0.5);
         const shuffledImg = [...glyphImages].sort(() => Math.random() - 0.5);
 
@@ -244,11 +254,19 @@
             const col = index % cols;
             const row = Math.floor(index / cols);
             
-            const x = marginSide + (col * cellWidth) + (cellWidth / 2) + (Math.random() - 0.5) * (cellWidth * 0.5) - 40;
-            const y = marginTop + (row * cellHeight) + (cellHeight / 2) + (Math.random() - 0.5) * (cellHeight * 0.5) - 40;
+            // Центр ячейки + небольшой случайный разброс
+            const baseX = marginSide + (col * cellWidth) + (cellWidth / 2);
+            const baseY = marginTop + (row * cellHeight) + (cellHeight / 2);
+            
+            const jitterX = (Math.random() - 0.5) * (cellWidth * 0.4);
+            const jitterY = (Math.random() - 0.5) * (cellHeight * 0.4);
+            
+            // Финальная позиция (вычитаем 40, так как размер глифа 80x80)
+            const finalX = Math.floor(baseX + jitterX - 40);
+            const finalY = Math.floor(baseY + jitterY - 40);
 
-            g.style.left = x + 'px';
-            g.style.top = y + 'px';
+            g.style.left = finalX + 'px';
+            g.style.top = finalY + 'px';
             
             const pCont = document.createElement('div');
             pCont.className = 'progress-container';
@@ -256,6 +274,12 @@
             layer.appendChild(g);
         });
     }
+
+    // Вместо window.onload используем небольшой таймаут, 
+    // чтобы Genially успел отрисовать контейнер
+    window.addEventListener('load', () => {
+        setTimeout(initGame, 100); 
+    });
 
     window.addEventListener('mousemove', (e) => {
         const x = e.clientX; const y = e.clientY;
@@ -379,3 +403,4 @@
 </script>
 </body>
 </html>
+
